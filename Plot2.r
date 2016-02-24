@@ -1,11 +1,14 @@
-filename = "household_power_consumption.txt"
-da1 = read.table(filename, header = T, sep = ";", na.strings = "?")
-da1$Date <- as.Date(da1$Date, format="%d/%m/%Y")
-da2 = subset(da1, subset=(Date >= "2007-02-01" & Date <= "2007-02-02"))
+# Plot 2
 
-datetime <- paste(as.Date(da2$Date), as.character(da2$Time))
-da2$Datetime <- as.POSIXct(datetime)
-plot(Global_active_power ~Datetime,data = da2, xlab = "",ylab = "Global Active Power (kilowatts)", type = "l")
+# subset data set containing observations from Maryland fip = 24510
+NEI <- readRDS("summarySCC_PM25.rds")
+SCC <- readRDS("Source_Classification_Code.rds")
 
-dev.copy(png, file="plot2.png", height=480, width=480)
+NEI_ml <- subset(NEI, fips == 24510)
+NEI_total <- tapply(NEI_ml$Emissions,factor(NEI_ml$year),sum)
+barplot(NEI_total, xlab = "Year", ylab = "Total Emission", main = "Total PM 2.5 Emission in Baltimore City")
+
+dev.copy(png, file="Proj2_plot2.png", height=480, width=480)
 dev.off()
+
+# It seems to have a decreasing trend along the year. However, in 2005, there was a relapse. 

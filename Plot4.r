@@ -1,21 +1,18 @@
-filename = "household_power_consumption.txt"
-da1 = read.table(filename, header = T, sep = ";", na.strings = "?")
-da1$Date <- as.Date(da1$Date, format="%d/%m/%Y")
-da2 = subset(da1, subset=(Date >= "2007-02-01" & Date <= "2007-02-02"))
+# Plot 4
+NEI <- readRDS("summarySCC_PM25.rds")
+SCC <- readRDS("Source_Classification_Code.rds")
 
-datetime <- paste(as.Date(da2$Date), as.character(da2$Time))
-da2$Datetime <- as.POSIXct(datetime)
+SCC.coal = SCC[grepl("coal", SCC$Short.Name, ignore.case=TRUE),]
 
-par(mfrow = c(2,2))
-plot(Global_active_power ~Datetime,data = da2, xlab = "",ylab = "Global Active Power (kilowatts)", type = "l")
-plot(Voltage~Datetime, data = da2,type = "l", xlab = "datetime", ylab = "Voltage")
-with(da2, {
-  plot(Datetime, Sub_metering_1, type="l", ylab="Energy Submetering", xlab="")
-  lines(Datetime, Sub_metering_2, type="l", col="red")
-  lines(Datetime, Sub_metering_3, type="l", col="blue")
-  legend("topright", c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"), lty=1, lwd=2.5, col=c("black", "red", "blue"))
-  
-})
-plot(Global_reactive_power~Datetime, data = da2, type = "l", xlab = "datetime", ylab="Global_reactive_power")
-dev.copy(png, file="plot4.png", height=480, width=480)
+# Merge two data sets
+merge <- merge(x=NEI, y=SCC.coal, by='SCC')
+merge.sum <- aggregate(merge[, 'Emissions'], by=list(merge$year), sum)
+colnames(merge.sum) <- c('Year', 'Emissions')
+require(ggplot2)
+ggplot(data=merge.sum, aes(x=Year, y=Emissions/1000)) + 
+  geom_bar(stat="identity") + theme_bw() + guides(fill=FALSE)+
+  labs(x="year", y=expression(paste('PM', ''[2.5], ' in kilotons'))) + 
+  labs(title=expression('Total Emissions of PM'[2.5]))
+
+dev.copy(png, file="Proj2_plot4.png", height=480, width=480)
 dev.off()
